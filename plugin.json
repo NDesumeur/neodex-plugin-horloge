@@ -3,7 +3,7 @@
   "name": "Horloge mondiale",
   "version": "1.3.1",
   "author": "NDesumeur",
-  "description": "L'heure dans plusieurs villes, avec un décalage pour comparer les fuseaux.",
+  "description": "L'heure en direct dans les villes de ton choix : heure à la seconde, date, décalage avec toi et jour ou nuit, changements d'heure compris. Ajoute une ville en tapant son nom, retire-la d'un clic, et décale toutes les horloges jusqu'à 24 heures pour savoir quelle heure il sera là-bas.",
   "icon": "icon.png",
   "entry": "index.js",
   "view": "horloge",
