@@ -24,3 +24,7 @@ Your list of cities is stored by NeoDex, backed up and synced between your PCs w
 In NeoDex: **NeoStore → Discover → Horloge mondiale → Install**.
 
 Building a plugin: see the [NeoDex SDK](https://github.com/NDesumeur/neodex-sdk).
+
+## Pixel-art clocks
+
+Each card shows a small pixel-art scene: the city's sky at its local time (day, dawn, dusk, starry night), the sun or moon on its arc, and an analog clock in front. The « Shift by » slider moves the sky and the hands with the time.

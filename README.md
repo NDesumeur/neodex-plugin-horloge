@@ -24,3 +24,7 @@ Ta liste de villes est enregistrée par NeoDex, sauvegardée et synchronisée en
 Dans NeoDex : **NeoStore → À découvrir → Horloge mondiale → Installer**.
 
 Développer un plugin : voir le [SDK NeoDex](https://github.com/NDesumeur/neodex-sdk).
+
+## Horloges pixel art
+
+Chaque carte montre une petite scène en pixel art : le ciel de la ville à son heure (jour, aube, crépuscule, nuit étoilée), le soleil ou la lune sur leur arc, et une horloge à aiguilles devant. Le curseur « Décaler de » fait tourner le ciel et les aiguilles avec l'heure.
