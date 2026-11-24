@@ -1,7 +1,7 @@
 {
   "id": "neodex.horloge",
   "name": "Horloge mondiale",
-  "version": "1.4.0",
+  "version": "1.5.0",
   "author": "NDesumeur",
   "description": "L'heure en direct dans les villes de ton choix : heure à la seconde, date, décalage avec toi et jour ou nuit, changements d'heure compris. Ajoute une ville en tapant son nom, retire-la d'un clic, et décale toutes les horloges jusqu'à 24 heures pour savoir quelle heure il sera là-bas. Chaque ville a son horloge à aiguilles en pixel art devant son ciel : jour, aube, crépuscule ou nuit étoilée, avec le soleil ou la lune sur leur arc. Textes plus grands, et la grille suit la taille de l'écran.",
   "icon": "icon.png",

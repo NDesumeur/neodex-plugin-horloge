@@ -4,6 +4,10 @@ The current time in the cities that matter to you, to the second, with a slider 
 
 *Version française : [README.md](README.md)*
 
+## Meeting planner (new in 1.5.0)
+
+One row per city, 24 hours of your day: the hours that suit everyone in green, the meeting ready to copy.
+
 ## The cities
 
 - The first card, **Here**, shows your local time. The next ones show each chosen city: the time with seconds, today's date there, the **offset** from you ("+6 h", "−9 h", "same time", half hours included) and a sun or moon icon depending on whether it is day (7 am to 8 pm) or night.
@@ -14,6 +18,10 @@ The current time in the cities that matter to you, to the second, with a slider 
 ## Shifting the time
 
 The **Shift by** slider moves every clock forward or back by up to 24 hours, hour by hour, to answer "when it is 6 pm here, what time will it be in Tokyo?". **Now** brings everything back to the current time.
+
+## Plan a meeting (1.5.0)
+
+Below the clocks, pick a day: each row is a city, each column an hour of your day. **Green**: office hours (9 am - 6 pm). **Yellow**: still possible (7 am - 10 pm). **Dark**: night. Underlined hours suit everyone, and are written at the top (for example “15:00 – 18:00”). Half-hour cities (India…) are exact. A click on an hour writes the meeting in each city: **COPY** puts it on the clipboard, **SHOW ON THE CLOCKS** shifts the clocks to that time.
 
 ## Data and sync
 

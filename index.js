@@ -1,7 +1,7 @@
 // Horloge mondiale : ton appli d'origine (HTML et code inchangés), livrée en plugin.
 // Ses données sont dans le dossier du plugin, que NeoDex sauvegarde (synchro cloud et sauvegardes) ; à la première ouverture elle reprend ce que tu avais dans NeoDex.
 // Elle tourne dans le bac à sable de NeoDex, avec ses outils d'interface (ctx.host) et seulement les autorisations de son plugin.json.
-const HTML = "<div class=\"appWrap wide\">\n      <div class=\"agHead\"><span class=\"label\">Horloge mondiale</span><input class=\"f\" id=\"wcAdd\" placeholder=\"Ajouter une ville… (Entrée)\" spellcheck=\"false\" style=\"width:clamp(220px,24vw,380px);margin-left:auto;font-size:16px;padding:9px 12px\"></div>\n      <div class=\"sysCard px\"><div class=\"bdPlan\">Décaler de <input type=\"range\" id=\"wcShift\" min=\"-24\" max=\"24\" value=\"0\" style=\"flex:1;accent-color:var(--magenta)\"><b id=\"wcShiftVal\"></b><button class=\"btn px\" id=\"wcNow\">MAINTENANT</button></div></div>\n      <div id=\"wcGrid\" class=\"sysGrid wcGrid\"></div>\n    </div>";
+const HTML = "<div class=\"appWrap wide\">\n      <div class=\"agHead\"><span class=\"label\">Horloge mondiale</span><input class=\"f\" id=\"wcAdd\" placeholder=\"Ajouter une ville… (Entrée)\" spellcheck=\"false\" style=\"width:clamp(220px,24vw,380px);margin-left:auto;font-size:16px;padding:9px 12px\"></div>\n      <div class=\"sysCard px\"><div class=\"bdPlan\">Décaler de <input type=\"range\" id=\"wcShift\" min=\"-24\" max=\"24\" value=\"0\" style=\"flex:1;accent-color:var(--magenta)\"><b id=\"wcShiftVal\"></b><button class=\"btn px\" id=\"wcNow\">MAINTENANT</button></div></div>\n      <div id=\"wcGrid\" class=\"sysGrid wcGrid\"></div>\n      <div class=\"sysCard px wcPlanCard\"><div class=\"bdPlan\"><b class=\"label\">PLANIFIER UNE RÉUNION</b><input type=\"date\" class=\"f\" id=\"wcPlanDay\" style=\"width:170px\"><span class=\"hint\" id=\"wcPlanBest\"></span></div><div id=\"wcPlan\" class=\"wcPlan\"></div><div id=\"wcPlanPick\" class=\"wcPick\"></div></div>\n    </div>";
 /*CSS-MOVED*/ const CSS = `.wcCard{position:relative}
 .wcHead{display:flex;align-items:center;justify-content:space-between}
 .wcTime{font:clamp(24px,2vw,34px) var(--title);color:#fff;margin:0;white-space:nowrap}
@@ -14,6 +14,14 @@ const HTML = "<div class=\"appWrap wide\">\n      <div class=\"agHead\"><span cl
 .wcCard .x{position:absolute;top:8px;right:8px;font-size:12px;visibility:hidden}
 .wcCard:hover .x{visibility:visible}
 .wcCard .x:hover{color:var(--red)}
+.wcPlanCard{margin-top:clamp(12px,1.4vw,22px)}
+.wcPlan{display:grid;grid-template-columns:minmax(90px,max-content) repeat(24,minmax(26px,1fr));gap:2px;margin-top:12px;overflow-x:auto;font-size:13px}
+.wcPlan .n{color:var(--lilac);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;padding:5px 8px 5px 0;align-self:center}
+.wcPlan .c{all:unset;cursor:var(--cp,pointer);text-align:center;padding:5px 0;color:#fff;font-variant-numeric:tabular-nums;box-shadow:inset 0 0 0 1px rgba(0,0,0,.35)}
+.wcPlan .k0{background:#1a1238;color:#8f7bb8}.wcPlan .k1{background:#6a5a1e}.wcPlan .k2{background:#2f7a3a}
+.wcPlan .best{box-shadow:inset 0 -3px 0 #7ee07a}.wcPlan .on{outline:2px solid #ffd34f;outline-offset:-2px;position:relative;z-index:1}
+.wcPlan .c:hover{filter:brightness(1.3)}.wcPlan .c:focus-visible{outline:2px solid #fff;outline-offset:-2px}
+.wcPick{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-top:10px;color:#fff;min-height:36px}
 .bdPlan{display:flex;align-items:center;gap:10px;flex-wrap:wrap;font-size:18px;color:var(--lilac)}
 .bdPlan .f{width:110px;font-size:15px;padding:7px 10px}
 .bdPlan select.f{width:160px}
@@ -82,7 +90,40 @@ export default async function (ctx) {
       return card;
     }));
   }
-  const setClocks = list => neo.setSettings({worldClocks: list.map(({name, tz}) => ({name, tz}))}).then(s => { prefs = s; wcRender(); });
+  // ---- le planificateur de réunion : chaque colonne est une heure de ta journée, chaque ligne une ville ;
+  // vert : heures de bureau (9 h - 18 h), jaune : encore possible (7 h - 22 h), sombre : la nuit. Les colonnes soulignées vont à tout le monde.
+  let planDay = ymd(new Date()), planPick = null;
+  const wcHourIn = (tz, t) => { const lm = new Date(t + wcOffset(tz, new Date(t)) * 60000); return lm.getUTCHours() + lm.getUTCMinutes() / 60; };
+  const slotKind = h => h >= 9 && h < 18 ? 2 : h >= 7 && h < 22 ? 1 : 0;
+  const hhmm = h => String(Math.floor(h)).padStart(2, '0') + ':' + String(Math.round(h % 1 * 60)).padStart(2, '0');
+  function planSlots(list, day) {  // pour chaque heure du jour : l'instant, l'heure et le genre dans chaque ville, le score
+    const [y, mo, da] = day.split('-').map(Number);
+    return [...Array(24)].map((_, i) => { const t = new Date(y, mo - 1, da, i).getTime(), hs = list.map(c => wcHourIn(c.tz, t)), ks = hs.map(slotKind);
+      return {i, t, hs, ks, min: Math.min(...ks), sum: ks.reduce((a, b) => a + b, 0)}; });
+  }
+  console.assert((() => { const sl = planSlots([{tz: 'Europe/Paris'}, {tz: 'America/New_York'}], '2027-01-12'); return sl[15].hs[1] === 9 && sl[15].min === 2 && sl[3].min === 0 && wcHourIn('Asia/Kolkata', Date.UTC(2027, 0, 12, 0)) === 5.5; })(), 'horloge : planificateur');
+  const spans = set => { const out = []; for (const i of [...set].sort((a, b) => a - b)) { const l = out[out.length - 1]; if (l && l[1] === i) l[1] = i + 1; else out.push([i, i + 1]); } return out.map(([a, b]) => b - a > 1 ? hhmm(a) + ' – ' + hhmm(b) : hhmm(a)).join(', '); };
+  function planRender() {
+    const list = wcList(), slots = planSlots(list, planDay), top = Math.max(...slots.map(x => x.min)), topSum = Math.max(...slots.filter(x => x.min === top).map(x => x.sum));
+    const best = new Set(slots.filter(x => x.min === top && x.sum === topSum && top > 0).map(x => x.i));
+    $('wcPlanBest').textContent = !best.size ? 'Aucune heure ne va à tout le monde ce jour-là.' : top === 2 ? 'Heures de bureau pour tous : ' + spans(best) + ' (ton heure)' : 'Le moins gênant : ' + spans(best) + ' (ton heure)';
+    const cells = [];
+    list.forEach((c, r) => { cells.push(el('span', 'n', c.here ? 'Ici' : c.name));
+      for (const x of slots) { const b = el('button', 'c k' + x.ks[r] + (best.has(x.i) ? ' best' : '') + (planPick === x.i ? ' on' : ''), x.hs[r] % 1 ? hhmm(x.hs[r]) : String(Math.floor(x.hs[r])));
+        b.title = c.name + ' : ' + hhmm(x.hs[r]) + ' (' + ['la nuit', 'possible', 'heures de bureau'][x.ks[r]] + ')'; b.onclick = () => { planPick = x.i; planRender(); }; cells.push(b); } });
+    $('wcPlan').style.gridTemplateColumns = 'minmax(90px,max-content) repeat(24,minmax(26px,1fr))'; $('wcPlan').replaceChildren(...cells);
+    const pick = $('wcPlanPick'); if (planPick === null) { pick.replaceChildren(el('span', 'hint', 'Clique une heure pour voir la réunion dans chaque ville.')); return; }
+    const x = slots[planPick], when = new Date(x.t).toLocaleDateString('fr-FR', {weekday: 'long', day: 'numeric', month: 'long'});
+    const text = 'Réunion le ' + when + ' : ' + list.map((c, r) => (c.here ? 'ici' : c.name) + ' ' + hhmm(x.hs[r]) + (x.ks[r] ? '' : ' (nuit)')).join(' · ');
+    const cp = el('button', 'btn px', 'COPIER'), see = el('button', 'btn px', 'VOIR SUR LES HORLOGES');
+    cp.onclick = () => navigator.clipboard.writeText(text).then(() => toast('Copié'), () => toast('Copie impossible', true));
+    see.onclick = () => { wcShift = Math.round((x.t - Date.now()) / 3600e3); wcShift = Math.max(-24, Math.min(24, wcShift)); $('wcShift').value = wcShift; wcRender(); view.scrollTo?.({top: 0, behavior: 'smooth'}); };
+    see.disabled = Math.abs(x.t - Date.now()) > 24.5 * 3600e3; see.title = see.disabled ? 'Les horloges se décalent de 24 h au plus' : 'Décaler les horloges à cette heure';
+    pick.replaceChildren(el('span', '', text), cp, see);
+  }
+  $('wcPlanDay').value = planDay; $('wcPlanDay').onchange = e => { if (e.target.value) { planDay = e.target.value; planPick = null; planRender(); } };
+  view.__wc = {planSlots, planRender, wcHourIn};  // pour le test « local »
+  const setClocks = list => neo.setSettings({worldClocks: list.map(({name, tz}) => ({name, tz}))}).then(s => { prefs = s; wcRender(); planRender(); });
   $('wcAdd').onkeydown = async e => {
     if (e.key !== 'Enter' || !e.target.value.trim()) return;
     try {
@@ -94,6 +135,6 @@ export default async function (ctx) {
   $('wcShift').oninput = e => { wcShift = +e.target.value; wcRender(); };
   $('wcNow').onclick = () => { wcShift = 0; $('wcShift').value = 0; wcRender(); };
   // ---- fin ----
-  ctx.onOpen(() => { wcRender(); });
+  ctx.onOpen(() => { wcRender(); planRender(); });
   ctx.onClose(() => { clearTimeout(wcTimer); });
 }

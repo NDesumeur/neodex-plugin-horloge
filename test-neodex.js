@@ -17,5 +17,9 @@ module.exports = async ({ pj, sleep }) => {
       const p = document.querySelector('.wcCard canvas.wcSky').getContext('2d').getImageData(0, 0, 48, 1).data; let m = 999; for (let i = 0; i < p.length; i += 4) m = Math.min(m, p[i] + p[i + 1] + p[i + 2]); out[k] = m; }  // le minimum de la rangée du haut : le ciel, pas une étoile
     document.getElementById('wcNow').click(); await new Promise(r => setTimeout(r, 100)); out.label = document.getElementById('wcShiftVal').textContent; return out; })()`);
   if (!(sky.midi > 350 && sky.minuit < 150) || sky.label !== 'maintenant') throw new Error('ciel : ' + JSON.stringify(sky));
-  return r.n + ' horloges pixel art à l’heure, scène de ' + Math.round(r.w) + ' px, ciel de midi ' + sky.midi + ' / minuit ' + sky.minuit;
+  // le planificateur : une ligne par ville, 24 heures ; un clic sur une heure donne la réunion dans chaque ville, à copier
+  const plan = await pj(`(async () => { const g = document.getElementById('wcPlan'), cells = g.querySelectorAll('.c'); cells[14].click(); await new Promise(r => setTimeout(r, 50));
+    return { cells: g.querySelectorAll('.c').length, rows: g.querySelectorAll('.n').length, pick: document.getElementById('wcPlanPick').textContent, best: document.getElementById('wcPlanBest').textContent }; })()`);
+  if (plan.cells !== plan.rows * 24 || plan.rows !== r.n || !/^Réunion le .* ici 14:00/.test(plan.pick)) throw new Error('planificateur : ' + JSON.stringify(plan));
+  return 'planificateur de réunion (' + plan.best.slice(0, 60) + ') · ' + r.n + ' horloges pixel art à l’heure, scène de ' + Math.round(r.w) + ' px, ciel de midi ' + sky.midi + ' / minuit ' + sky.minuit;
 };
