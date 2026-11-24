@@ -1,9 +1,9 @@
 {
   "pluginId": "neodex.horloge",
   "repo": "NDesumeur/neodex-plugin-horloge",
-  "version": "1.4.0",
-  "sha256": "29ee81be477dbbadf6400f9470e26fd81b87d23300f33427475c1dbeddd65331",
-  "approvedAt": "2026-11-16T04:14:36.584Z",
+  "version": "1.5.0",
+  "sha256": "8a5c0badf290f918be36c74cf7605975217fb81b3399faa78fba01cc179d74b4",
+  "approvedAt": "2026-11-24T15:56:20.305Z",
   "neobase": ">=4.0.0",
-  "signature": "QmQvjXlYhPqS9ESHy/IUeUQRClXmFTNeeep8DDYZ7Lkj28+okyjyh0XnkOZtb3ePB6XPye4385xJLFcLvEvABw=="
+  "signature": "URKuPiAcPKudpxwbGmEAnjvBxTL/+Nc5RTGju3z4uuES1Ly0r4EAKiLS/35DehVyl6yZtacuRkE2DGQ97iV1BA=="
 }
